@@ -13,5 +13,6 @@ dependencies:
   - jupyter
   - ipykernel
   - pip
-  - pip:
-      - streamlit  # for dashboard (optional)
+  - python-docx
+  - pymupdf
+  - streamlit

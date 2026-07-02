@@ -1,1 +1,6 @@
 docs
+.ipynb_checkpoints
+__pycache__
+__init__.py
+__init__.pyc
+__init__.cpython-314.pyc
