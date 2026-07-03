@@ -1,6 +1,14 @@
-docs
-.ipynb_checkpoints
-__pycache__
-__init__.py
-__init__.pyc
-__init__.cpython-314.pyc
+# --- Build / Python ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# --- Jupyter ---
+.ipynb_checkpoints/
+
+# --- Docs (build artefact) ---
+docs/
+
+# Note: __init__.py is intentionally NOT ignored — it is the
+# Python package marker required for `from src...` imports.
