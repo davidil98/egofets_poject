@@ -1,29 +1,21 @@
-"""Reader package — register and select instrument readers.
+"""Reader package for EGOFET measurement files.
 
-Public API:
-    - `Reader` (base class)         → from src.readers.base
-    - `Measurement` (dataclass)     → re-exported here
-    - `read_hdf5(filepath, reader)`  → convenience function
-    - `register_reader(r)`          → for new instruments
-    - `get_reader(name)`            → lookup by name
-    - `list_readers()`              → all registered names
+HDF5 file structure:
+    /                          (root)
+      MeasurementName/         (group, attrs: measurement_mode)
+        curve_000/             (group, attrs: V_DS o V_GS)
+          measured_V_GS        (dataset)
+          measured_I_DS        (dataset)
+        curve_001/
+          ...
 """
 
-from .base import Reader
-from .keithley2600 import Keithley2600Reader
-from ..readers_core import Measurement, list_measurements
-
-# Registry functions defined after base classes to avoid circular imports
-from . import registry as _registry
-from .registry import register_reader, get_reader, list_readers, read_hdf5
+from .base import print_structure
+from .keithley_dean import list_measurements, read_curve, read_all_curves
 
 __all__ = [
-    "Reader",
-    "Keithley2600Reader",
-    "Measurement",
+    "print_structure",
     "list_measurements",
-    "read_hdf5",
-    "register_reader",
-    "get_reader",
-    "list_readers",
+    "read_curve",
+    "read_all_curves",
 ]

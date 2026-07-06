@@ -11,7 +11,7 @@ Reconstrucción paso a paso del notebook y los módulos src/.
 | 5 | Detectar forward/reverse (dirección del barrido en V_GS) | ✅ celda[4] | — | done |
 | 6 | Graficar forward y reverse separados (histéresis visible) | ✅ celda[5] | — | done |
 | 7 | Iterar múltiples curvas de una medición, colores por V_DS | ✅ celda[6] | — | done |
-| 8 | Función reutilizable: `plot_transfer_curve(hdf5_path, measurement_name)` | ⬜ | `plotting.py` | pending |
+| 8 | Función reutilizable: `plot_transfer_curve(hdf5_path, measurement_name)` | ✅ celda[7,8] | `plotting.py` | done |
 
 ---
 

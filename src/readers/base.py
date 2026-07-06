@@ -1,38 +1,37 @@
-"""Abstract base class for instrument readers."""
+"""Base functions for reading and inspecting HDF5 files."""
 
-from abc import ABC, abstractmethod
-from pathlib import Path
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from ..readers_core import Measurement
+import h5py
 
 
-class Reader(ABC):
-    """Base class for all instrument data readers.
+def print_structure(hdf5_path, max_depth=3):
+    """Print the group/dataset tree of an HDF5 file.
 
-    Subclasses must define `name` and implement `read()`.
-    Optionally, override `can_read()` to autodetect if the reader
-    can handle a given file.
+    Parameters
+    ----------
+    hdf5_path : str
+        Path to the HDF5 file.
+    max_depth : int
+        Maximum depth to descend into groups (default 3).
     """
+    def _walk(grp, prefix, depth):
+        if depth > max_depth:
+            return
+        for key in sorted(grp.keys()):
+            item = grp[key]
+            if isinstance(item, h5py.Group):
+                n_children = len(item.keys())
+                attrs = dict(item.attrs)
+                attr_str = ""
+                if attrs:
+                    attr_str = "  " + ", ".join(
+                        f"{k}={v}" for k, v in attrs.items()
+                    )
+                print(f"{prefix}{key}/ [{n_children} children]{attr_str}")
+                _walk(item, prefix + "  ", depth + 1)
+            else:
+                print(f"{prefix}{key}  shape={item.shape}  dtype={item.dtype}")
 
-    name: str = ""
-    description: str = ""
-
-    @abstractmethod
-    def read(self, filepath: Path) -> dict[str, Measurement]:
-        """Read the file and return a dict of {measurement_name: Measurement}."""
-        ...
-
-    def can_read(self, filepath: Path) -> bool:
-        """Optional: detect if this reader can handle the file.
-
-        Default: check that the file exists and has a supported extension.
-        Subclasses can override for content-based detection.
-        """
-        if not filepath.exists():
-            return False
-        return filepath.suffix.lower() in {".hdf5", ".h5", ".he5"}
-
-    def __repr__(self) -> str:
-        return f"<Reader '{self.name}'>"
+    with h5py.File(hdf5_path, 'r') as f:
+        print(f"HDF5: {hdf5_path}")
+        print(f"/ [{len(f.keys())} groups]")
+        _walk(f, "  ", depth=1)
