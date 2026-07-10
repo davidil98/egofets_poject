@@ -12,6 +12,7 @@ Each top-level group is a measurement. Its structure:
 """
 
 import h5py
+import os
 
 
 def list_measurements(hdf5_path):
@@ -31,6 +32,26 @@ def list_measurements(hdf5_path):
                 'n_curves': n_curves,
             })
     return measurements
+
+def view_measurements(hdf5_path):
+    """Read the measurement names and print them in a format like table.
+    
+    Returns a str."""
+
+    with h5py.File(hdf5_path, 'r') as f:
+        print(f"Archivo: {os.path.basename(hdf5_path)}")
+        print(f"Mediciones encontradas ({len(f.keys())}):\n")
+
+        lines = []
+        for name in sorted(f.keys()):
+            group = f[name]
+            mode = group.attrs.get('measurement_mode', 'desconocido')
+            n_curves = len([k for k in group.keys() if k.startswith('curve_')])
+            lines.append(f"  {name:50s}  mode={mode:10s}  curves={n_curves}")
+
+        str_data = '\n'.join(lines)
+        print(str_data)
+        return str_data
 
 
 def read_curve(hdf5_path, measurement_name, curve_name='curve_000'):
