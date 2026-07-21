@@ -15,8 +15,8 @@ definidos por la relación entre $V_{DS}$ y $(V_{GS} - V_{th})$:
 
 | Régimen | Condición | Comportamiento de $I_{DS}$ |
 |---|---|---|
-| **Lineal (triodo)** | $|V_{DS}| \ll |V_{GS} - V_{th}|$ | Crece linealmente con $V_{DS}$ |
-| **Saturación** | $|V_{DS}| \geq |V_{GS} - V_{th}|$ | Se "aplana", ya no depende de $V_{DS}$ |
+| **Lineal (triodo)** | $\vert V_{DS} \vert \ll \vert V_{GS} - V_{th} \vert$ | Crece linealmente con $V_{DS}$ |
+| **Saturación** | $\vert V_{DS} \vert \geq \vert V_{GS} - V_{th} \vert$ | Se "aplana", ya no depende de $V_{DS}$ |
 
 Físicamente, en saturación el canal se **"pincha"** (pinch-off) cerca del
 drenador: por mucho que aumentes $V_{DS}$, la corriente no sube más (o sube
