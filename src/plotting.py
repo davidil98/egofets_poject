@@ -73,28 +73,4 @@ def plot_transfer(hdf5_path, measurement_name, ax=None):
 def plot_i_vs_time(hdf5_path, measurement_name, array_time: np.ndarray, ax=None):
     """Grafica Ids vs time para una medicion i-vs-t desde un HDF5."""
     
-    if ax is None:
-        fig, ax = plt.subplots(figsize=(8, 5))
-    else:
-        fig = ax.figure
     
-    colors = plt.cm.tab10.colors
-    curves = read_all_curves(hdf5_path, measurement_name)
-
-    for i, c in enumerate(curves):
-        i_ds = c['i_ds']
-        time = array_time
-        curve_name = c['curve_name']
-        curve_idx = curve_name.split('_')[-1]
-        color = colors[i % len(colors)]
-
-        ax.plot(time, i_ds, 'o-', ms=3, color=color,
-                    label=f'Curve #{curve_idx}')
-
-    ax.set_xlabel(r"$t$ (s)")
-    ax.set_ylabel(r"$I_{DS}$ (A)")
-    ax.set_title(f"I-vs-t — {measurement_name}")
-    ax.legend(fontsize=8, title=r'Curve')
-    ax.grid(True, alpha=0.3)
-
-    return fig, ax

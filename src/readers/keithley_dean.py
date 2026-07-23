@@ -53,6 +53,64 @@ def view_measurements(hdf5_path):
         print(str_data)
         return str_data
 
+def get_dset_names(hdf5_path, measurement_name):
+    """Get the dataset names from a measurement.
+    
+    Returns a list of dicts with keys: name, shape, dtype, attrs.
+    """
+    datasets = []
+    with h5py.File(hdf5_path, 'r') as f:
+        group = f[measurement_name]
+        for name in sorted(group.keys()):
+            dataset = group[name]
+            datasets.append({
+                'name': name,
+                'shape': dataset.shape,
+                'dtype': dataset.dtype,
+                'attrs': dict(dataset.attrs),
+            })
+    return datasets
+
+def get_dset_array(hdf5_path, measurement_name, dsets: list = None) -> tuple:
+    """Get the array from a dataset.
+    
+    Returns a numpy array for each dataset. If not specified, return all dsets.
+
+    Parameters
+    ----------
+    hdf5_path : str
+        Path to the HDF5 file.
+    measurement_name : str
+        Name of the measurement group.
+    dsets : list, optional
+        List of dataset names to read. If None, all datasets are read.
+
+    Returns
+    =======
+    tuple
+        Tuple of numpy arrays.
+    
+    Example:
+    
+    value1, value2, ... valueN = get_dset_array(hdf5_path, measurement_name, dsets=['measured_V_GS', 'measured_I_DS', ...])
+
+    or
+
+    dset1, dset2, *others = get_dset_array(hdf5_path, measurement_name)
+    """
+
+    dsets_list = []
+
+    with h5py.File(hdf5_path, 'r') as f:
+        group = f[measurement_name]
+        if dsets is None:
+            dsets = sorted(group.keys())
+        
+        for name in dsets:
+            dataset = group[name]
+            dsets_list.append(dataset[:])
+    
+    return tuple(dsets_list)
 
 def read_curve(hdf5_path, measurement_name, curve_name='curve_000'):
     """Read V_GS and I_DS from a single transfer curve.
