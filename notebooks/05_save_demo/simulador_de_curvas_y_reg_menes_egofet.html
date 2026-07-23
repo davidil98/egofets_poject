@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Curvas Características EGOFET</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --panel-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --line-out: #10b981;
+            --line-trans: #f59e0b;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        input[type=range] {
+            flex-grow: 1;
+            accent-color: var(--accent);
+        }
+        .value-display {
+            font-family: monospace;
+            background: #000;
+            padding: 4px 8px;
+            border-radius: 6px;
+            width: 70px;
+            text-align: right;
+        }
+        .badge {
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .badge.corte { background-color: #ef4444; color: white; }
+        .badge.lineal { background-color: #3b82f6; color: white; }
+        .badge.saturacion { background-color: #10b981; color: white; }
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="max-w-5xl mx-auto flex flex-col gap-6">
+        
+        <!-- Panel de Control Superior -->
+        <div class="bg-slate-800 p-6 rounded-xl shadow-lg">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                    <h2 class="text-xl font-bold mb-4 text-blue-400">Control de Voltajes</h2>
+                    
+                    <div class="slider-container">
+                        <label class="w-32 font-semibold">Voltaje Puerta (V<sub>GS</sub>)</label>
+                        <input type="range" id="vgsSlider" min="0" max="1.0" step="0.01" value="0.6">
+                        <div class="value-display text-blue-400"><span id="vgsVal">0.60</span> V</div>
+                    </div>
+                    
+                    <div class="slider-container">
+                        <label class="w-32 font-semibold">Voltaje Drenador (V<sub>DS</sub>)</label>
+                        <input type="range" id="vdsSlider" min="0" max="1.0" step="0.01" value="0.3">
+                        <div class="value-display text-emerald-400"><span id="vdsVal">0.30</span> V</div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col justify-center items-start md:items-end bg-slate-900 p-4 rounded-lg border border-slate-700">
+                    <div class="text-sm text-slate-400 mb-1">Régimen de Operación Actual:</div>
+                    <div id="regimeBadge" class="badge lineal mb-4 text-lg">LINEAL</div>
+                    
+                    <div class="text-sm text-slate-400 mb-1">Corriente de Drenador (I<sub>D</sub>):</div>
+                    <div class="text-3xl font-mono text-white"><span id="idVal">0.00</span> µA</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráficos -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Curva de Salida -->
+            <div class="bg-slate-800 p-4 rounded-xl shadow-lg flex flex-col h-80">
+                <h3 class="text-center font-semibold mb-2 text-emerald-400">Curva de Salida (I<sub>D</sub> vs V<sub>DS</sub>)</h3>
+                <div class="flex-grow relative">
+                    <canvas id="outputCanvas"></canvas>
+                </div>
+            </div>
+            
+            <!-- Curva de Transferencia -->
+            <div class="bg-slate-800 p-4 rounded-xl shadow-lg flex flex-col h-80">
+                <h3 class="text-center font-semibold mb-2 text-amber-400">Curva de Transferencia (I<sub>D</sub> vs V<sub>GS</sub>)</h3>
+                <div class="flex-grow relative">
+                    <canvas id="transferCanvas"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Animación Física (NUEVO) -->
+        <div class="bg-slate-800 p-4 rounded-xl shadow-lg flex flex-col h-96">
+            <h3 class="text-center font-semibold mb-2 text-purple-400">Visión a Nivel Nanoscópico (Sección Transversal)</h3>
+            <p class="text-center text-xs text-slate-400 mb-3">Muestra la capa iónica, el grosor del canal y el flujo de portadores de carga sometidos al campo eléctrico.</p>
+            <div class="flex-grow relative overflow-hidden rounded-lg border border-slate-700 bg-slate-900">
+                <canvas id="physicsCanvas"></canvas>
+            </div>
+        </div>
+
+        <!-- Asistente IA (Tutor Gemini) -->
+        <div class="bg-slate-800 p-6 rounded-xl shadow-lg">
+            <h2 class="text-xl font-bold mb-4 text-indigo-400 flex items-center gap-2">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                Tutor Inteligente de Física (IA)
+            </h2>
+            <div class="flex flex-col md:flex-row gap-4 mb-4">
+                <button id="btnAnalyze" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex-shrink-0 shadow-md">
+                    Analizar Estado Actual
+                </button>
+                <div class="flex-grow flex gap-2">
+                    <input type="text" id="aiInput" placeholder="Haz una pregunta teórica sobre EGOFETs..." class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500 shadow-inner">
+                    <button id="btnAsk" class="bg-slate-700 hover:bg-slate-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors shadow-md">
+                        Preguntar
+                    </button>
+                </div>
+            </div>
+            <div id="aiOutput" class="bg-slate-900 border border-slate-700 p-5 rounded-lg min-h-[120px] text-slate-300 text-sm whitespace-pre-wrap overflow-y-auto max-h-72 transition-all shadow-inner leading-relaxed">
+                <em>Hola, soy tu tutor impulsado por inteligencia artificial. Puedes pedirme que analice el estado actual del transistor o hacerme cualquier pregunta libre sobre cómo funciona la doble capa eléctrica, el estrangulamiento del canal, la física de los semiconductores orgánicos, etc.</em>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Parámetros físicos del modelo FET
+        const V_TH = 0.2; // Voltaje umbral (Threshold Voltage) típico en EGOFETs (0.2V)
+        const K = 150;    // Parámetro de conductancia (movilidad * capacitancia * W/L)
+        const LAMBDA = 0.05; // Efecto de modulación de longitud de canal (Early effect)
+
+        // Elementos del DOM
+        const vgsSlider = document.getElementById('vgsSlider');
+        const vdsSlider = document.getElementById('vdsSlider');
+        const vgsVal = document.getElementById('vgsVal');
+        const vdsVal = document.getElementById('vdsVal');
+        const idVal = document.getElementById('idVal');
+        const regimeBadge = document.getElementById('regimeBadge');
+        
+        const outCanvas = document.getElementById('outputCanvas');
+        const transCanvas = document.getElementById('transferCanvas');
+        const outCtx = outCanvas.getContext('2d');
+        const transCtx = transCanvas.getContext('2d');
+
+        const physCanvas = document.getElementById('physicsCanvas');
+        const physCtx = physCanvas.getContext('2d');
+        let particles = []; // Portadores de carga simulados
+        let lastTime = 0;
+
+        // Calcula la corriente ID basado en VGS y VDS
+        function calculateId(vgs, vds) {
+            if (vgs <= V_TH) {
+                // Régimen de Corte (Subumbral simplificado a 0 para esta demo)
+                return { id: 0, regime: 'corte' };
+            } 
+            
+            const vdsSat = vgs - V_TH; // Voltaje de estrangulamiento (pinch-off)
+
+            if (vds < vdsSat) {
+                // Régimen Lineal
+                const id = K * ((vgs - V_TH) * vds - (vds * vds) / 2) * (1 + LAMBDA * vds);
+                return { id: id, regime: 'lineal' };
+            } else {
+                // Régimen de Saturación
+                const id = (K / 2) * Math.pow(vgs - V_TH, 2) * (1 + LAMBDA * vds);
+                return { id: id, regime: 'saturacion' };
+            }
+        }
+
+        // Ajustar el canvas al tamaño del contenedor
+        function resizeCanvas() {
+            outCanvas.width = outCanvas.parentElement.clientWidth;
+            outCanvas.height = outCanvas.parentElement.clientHeight;
+            transCanvas.width = transCanvas.parentElement.clientWidth;
+            transCanvas.height = transCanvas.parentElement.clientHeight;
+            physCanvas.width = physCanvas.parentElement.clientWidth;
+            physCanvas.height = physCanvas.parentElement.clientHeight;
+            draw();
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+
+        // Dibuja el gráfico de salida (ID vs VDS)
+        function drawOutputCurve(vgsCurrent, vdsCurrent, currentId, regime) {
+            outCtx.clearRect(0, 0, outCanvas.width, outCanvas.height);
+            
+            const w = outCanvas.width;
+            const h = outCanvas.height;
+            const padding = 40;
+            
+            // Ejes
+            outCtx.strokeStyle = '#475569'; // slate-600
+            outCtx.lineWidth = 2;
+            outCtx.beginPath();
+            outCtx.moveTo(padding, 10);
+            outCtx.lineTo(padding, h - padding);
+            outCtx.lineTo(w - 10, h - padding);
+            outCtx.stroke();
+
+            // Textos de ejes
+            outCtx.fillStyle = '#94a3b8';
+            outCtx.font = '12px sans-serif';
+            outCtx.fillText('VDS (V)', w - 40, h - padding + 15);
+            outCtx.save();
+            outCtx.translate(padding - 15, 40);
+            outCtx.rotate(-Math.PI/2);
+            outCtx.fillText('ID (µA)', 0, 0);
+            outCtx.restore();
+
+            // Mapeo de coordenadas
+            const maxVDS = 1.0;
+            const maxID = Math.max(calculateId(1.0, 1.0).id * 1.1, 10); // Autoescala base
+            
+            const mapX = (v) => padding + (v / maxVDS) * (w - padding - 20);
+            const mapY = (i) => (h - padding) - (i / maxID) * (h - padding - 20);
+
+            // Dibujar familia de curvas de fondo para varios VGS fijos
+            const bgVgs = [0.4, 0.6, 0.8, 1.0];
+            outCtx.lineWidth = 1;
+            
+            bgVgs.forEach(vgsFixed => {
+                outCtx.beginPath();
+                outCtx.strokeStyle = vgsFixed === parseFloat(vgsCurrent) ? '#10b981' : '#334155'; // Resaltar si coincide
+                
+                for(let vds = 0; vds <= maxVDS; vds += 0.02) {
+                    const id = calculateId(vgsFixed, vds).id;
+                    const x = mapX(vds);
+                    const y = mapY(id);
+                    if (vds === 0) outCtx.moveTo(x, y);
+                    else outCtx.lineTo(x, y);
+                }
+                outCtx.stroke();
+            });
+
+            // Dibujar curva activa (VGS actual)
+            outCtx.beginPath();
+            outCtx.strokeStyle = '#10b981'; // emerald-500
+            outCtx.lineWidth = 3;
+            for(let vds = 0; vds <= maxVDS; vds += 0.02) {
+                const id = calculateId(vgsCurrent, vds).id;
+                const x = mapX(vds);
+                const y = mapY(id);
+                if (vds === 0) outCtx.moveTo(x, y);
+                else outCtx.lineTo(x, y);
+            }
+            outCtx.stroke();
+
+            // Dibujar punto de operación
+            const px = mapX(vdsCurrent);
+            const py = mapY(currentId);
+            
+            // Líneas guías del punto
+            outCtx.setLineDash([5, 5]);
+            outCtx.strokeStyle = 'rgba(255,255,255,0.3)';
+            outCtx.lineWidth = 1;
+            outCtx.beginPath();
+            outCtx.moveTo(padding, py);
+            outCtx.lineTo(px, py);
+            outCtx.lineTo(px, h - padding);
+            outCtx.stroke();
+            outCtx.setLineDash([]);
+
+            // Punto
+            outCtx.beginPath();
+            outCtx.arc(px, py, 6, 0, Math.PI * 2);
+            outCtx.fillStyle = '#ef4444'; // red-500
+            outCtx.fill();
+            outCtx.strokeStyle = '#fff';
+            outCtx.lineWidth = 2;
+            outCtx.stroke();
+        }
+
+        // Dibuja el gráfico de transferencia (ID vs VGS)
+        function drawTransferCurve(vgsCurrent, vdsCurrent, currentId) {
+            transCtx.clearRect(0, 0, transCanvas.width, transCanvas.height);
+            
+            const w = transCanvas.width;
+            const h = transCanvas.height;
+            const padding = 40;
+            
+            // Ejes
+            transCtx.strokeStyle = '#475569';
+            transCtx.lineWidth = 2;
+            transCtx.beginPath();
+            transCtx.moveTo(padding, 10);
+            transCtx.lineTo(padding, h - padding);
+            transCtx.lineTo(w - 10, h - padding);
+            transCtx.stroke();
+
+            // Textos
+            transCtx.fillStyle = '#94a3b8';
+            transCtx.font = '12px sans-serif';
+            transCtx.fillText('VGS (V)', w - 40, h - padding + 15);
+
+            // Mapeo
+            const maxVGS = 1.0;
+            const maxID = Math.max(calculateId(1.0, 1.0).id * 1.1, 10);
+            
+            const mapX = (v) => padding + (v / maxVGS) * (w - padding - 20);
+            const mapY = (i) => (h - padding) - (i / maxID) * (h - padding - 20);
+
+            // Dibujar línea del V_TH (Voltaje Umbral)
+            const vthX = mapX(V_TH);
+            transCtx.setLineDash([4, 4]);
+            transCtx.strokeStyle = '#ef4444'; // rojo para indicar el umbral
+            transCtx.beginPath();
+            transCtx.moveTo(vthX, h - padding);
+            transCtx.lineTo(vthX, 10);
+            transCtx.stroke();
+            transCtx.setLineDash([]);
+            transCtx.fillText('Vth', vthX - 10, h - padding + 15);
+
+            // Dibujar curva de transferencia para el VDS actual
+            transCtx.beginPath();
+            transCtx.strokeStyle = '#f59e0b'; // amber-500
+            transCtx.lineWidth = 3;
+            for(let vgs = 0; vgs <= maxVGS; vgs += 0.02) {
+                const id = calculateId(vgs, vdsCurrent).id;
+                const x = mapX(vgs);
+                const y = mapY(id);
+                if (vgs === 0) transCtx.moveTo(x, y);
+                else transCtx.lineTo(x, y);
+            }
+            transCtx.stroke();
+
+            // Punto de operación
+            const px = mapX(vgsCurrent);
+            const py = mapY(currentId);
+            
+            transCtx.setLineDash([5, 5]);
+            transCtx.strokeStyle = 'rgba(255,255,255,0.3)';
+            transCtx.lineWidth = 1;
+            transCtx.beginPath();
+            transCtx.moveTo(padding, py);
+            transCtx.lineTo(px, py);
+            transCtx.lineTo(px, h - padding);
+            transCtx.stroke();
+            transCtx.setLineDash([]);
+
+            transCtx.beginPath();
+            transCtx.arc(px, py, 6, 0, Math.PI * 2);
+            transCtx.fillStyle = '#ef4444';
+            transCtx.fill();
+            transCtx.strokeStyle = '#fff';
+            transCtx.lineWidth = 2;
+            transCtx.stroke();
+        }
+
+        function draw() {
+            const vgs = parseFloat(vgsSlider.value);
+            const vds = parseFloat(vdsSlider.value);
+            
+            const result = calculateId(vgs, vds);
+            const id = result.id;
+            const regime = result.regime;
+
+            // Actualizar textos UI
+            vgsVal.innerText = vgs.toFixed(2);
+            vdsVal.innerText = vds.toFixed(2);
+            idVal.innerText = id.toFixed(1);
+
+            // Actualizar Badge
+            regimeBadge.className = `badge ${regime} mb-4 text-lg`;
+            if (regime === 'corte') regimeBadge.innerText = "CORTE (OFF)";
+            if (regime === 'lineal') regimeBadge.innerText = "LINEAL (OHMICO)";
+            if (regime === 'saturacion') regimeBadge.innerText = "SATURACIÓN (ON)";
+
+            // Redibujar Canvas
+            drawOutputCurve(vgs, vds, id, regime);
+            drawTransferCurve(vgs, vds, id);
+        }
+
+        // Loop principal de animación para visualizar la física
+        function drawPhysics(time) {
+            // Calcular delta time para el movimiento consistente de las partículas
+            const dt = (time - lastTime) / 1000 || 0.016;
+            lastTime = time;
+
+            physCtx.clearRect(0, 0, physCanvas.width, physCanvas.height);
+            const w = physCanvas.width;
+            const h = physCanvas.height;
+            
+            const vgs = parseFloat(vgsSlider.value);
+            const vds = parseFloat(vdsSlider.value);
+            const result = calculateId(vgs, vds);
+            
+            // Dimensiones arquitectónicas
+            const gateHeight = 25;
+            const channelY = h / 2 + 10;
+            const electrodeW = Math.max(50, w * 0.15);
+            const channelWidth = w - 2 * electrodeW;
+            
+            // 1. Dibujar Electrolito
+            physCtx.fillStyle = '#0284c7'; // Azul agua
+            physCtx.globalAlpha = 0.2;
+            physCtx.fillRect(0, gateHeight, w, channelY - gateHeight);
+            physCtx.globalAlpha = 1.0;
+            physCtx.fillStyle = 'rgba(14, 165, 233, 0.6)';
+            physCtx.font = '14px sans-serif';
+            physCtx.textAlign = 'center';
+            physCtx.fillText('Medio Acuoso (Electrolito)', w/2, channelY - 40);
+
+            // 2. Dibujar Electrodo Gate
+            physCtx.fillStyle = '#64748b';
+            physCtx.fillRect(0, 0, w, gateHeight);
+            physCtx.fillStyle = '#f8fafc';
+            physCtx.font = 'bold 12px sans-serif';
+            physCtx.fillText('Electrodo de Puerta (Gate)', w/2, 16);
+
+            // 3. Source, Drain y Semiconductor
+            physCtx.fillStyle = '#cbd5e1'; // Metal
+            physCtx.fillRect(0, channelY, electrodeW, h - channelY);
+            physCtx.fillRect(w - electrodeW, channelY, electrodeW, h - channelY);
+            physCtx.fillStyle = '#0f172a';
+            physCtx.fillText('Fuente (S)', electrodeW/2, channelY + 25);
+            physCtx.fillText('Drenador (D)', w - electrodeW/2, channelY + 25);
+
+            physCtx.fillStyle = '#1e293b'; // Base del Semiconductor Orgánico
+            physCtx.fillRect(electrodeW, channelY, channelWidth, h - channelY);
+            physCtx.fillStyle = '#94a3b8';
+            physCtx.fillText('Semiconductor Orgánico (OSC)', w/2, h - 20);
+
+            // 4. Geometría del Canal Inducido (Modelando el Pinch-off)
+            let pinchOffX = channelWidth;
+            physCtx.fillStyle = 'rgba(16, 185, 129, 0.25)'; // Verde volumen portadores
+            
+            if (vgs > V_TH) {
+                physCtx.beginPath();
+                physCtx.moveTo(electrodeW, channelY);
+                
+                for(let x = 0; x <= channelWidth; x += 5) {
+                    // El voltaje local V(x) aumenta hacia el Drain contrarrestando Vgs
+                    const localV = (x / channelWidth) * vds; 
+                    let depth = (vgs - V_TH - localV) * 40; // Escala visual del grosor
+                    
+                    if (depth <= 0) {
+                        depth = 0;
+                        if (pinchOffX === channelWidth) pinchOffX = x; // Punto donde el canal colapsa
+                    }
+                    physCtx.lineTo(electrodeW + x, channelY + depth);
+                }
+                physCtx.lineTo(electrodeW + pinchOffX, channelY);
+                physCtx.fill();
+            } else {
+                pinchOffX = 0;
+            }
+
+            // 5. Iones de la Doble Capa Eléctrica (EDL)
+            if (vgs > 0) {
+                const numIons = Math.min(Math.floor(vgs * 60), 150);
+                
+                // Cationes en el Gate
+                physCtx.fillStyle = '#f59e0b'; // Naranja
+                for (let i = 0; i < numIons; i++) {
+                    const ix = Math.random() * w;
+                    const iy = gateHeight + 2 + Math.random() * 8;
+                    physCtx.beginPath(); physCtx.arc(ix, iy, 2.5, 0, Math.PI*2); physCtx.fill();
+                }
+                
+                // Aniones en la interfaz del OSC
+                physCtx.fillStyle = '#ef4444'; // Rojo
+                for (let i = 0; i < numIons; i++) {
+                    const ix = electrodeW + Math.random() * channelWidth;
+                    const iy = channelY - 2 - Math.random() * 8;
+                    physCtx.beginPath(); physCtx.arc(ix, iy, 2.5, 0, Math.PI*2); physCtx.fill();
+                }
+            }
+
+            // 6. FÍSICA DE PARTÍCULAS: Portadores de carga
+            if (vgs > V_TH && vds > 0) {
+                // Tasa de inyección proporcional a la corriente microscópica
+                const spawnProbability = Math.min(result.id * 1.5, 60); 
+                if (Math.random() * 100 < spawnProbability) {
+                    particles.push({
+                        x: electrodeW,
+                        // Nacen en la profundidad disponible del canal en Source
+                        y: channelY + Math.random() * ((vgs - V_TH) * 40),
+                        // Su velocidad lateral base dictada por VDS
+                        vx: 30 + (vds * 150) + Math.random() * 20
+                    });
+                }
+            }
+
+            // Integración de movimiento
+            physCtx.fillStyle = '#10b981'; // Puntos verdes (electrones/huecos)
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.x += p.vx * dt;
+                
+                // ZONA DE AGOTAMIENTO (Pasado el Pinch-off)
+                if ((p.x - electrodeW) > pinchOffX) {
+                    // El altísimo campo eléctrico los acelera al límite
+                    p.vx = Math.max(p.vx, 350); 
+                    // Se comprimen contra la interfaz por la falta de canal profundo
+                    p.y += (channelY + 1 - p.y) * 0.2; 
+                }
+
+                // Cosecha en el Drain
+                if (p.x >= w - electrodeW) {
+                    particles.splice(i, 1);
+                } else {
+                    physCtx.beginPath();
+                    physCtx.arc(p.x, p.y, 2.5, 0, Math.PI * 2);
+                    physCtx.fill();
+                }
+            }
+
+            // 7. Señalización en tiempo real
+            physCtx.fillStyle = '#f8fafc';
+            physCtx.font = 'bold 13px sans-serif';
+            
+            if (result.regime === 'corte') {
+                physCtx.fillText('CORTE: No hay cargas inducidas, canal cerrado.', w/2, channelY + 40);
+            } else if (result.regime === 'lineal') {
+                physCtx.fillText('LINEAL: Canal ancho y flujo uniforme de cargas.', w/2, channelY + 60);
+            } else if (result.regime === 'saturacion') {
+                physCtx.fillStyle = '#ef4444';
+                // Dibujar flecha indicadora de Pinch-off
+                physCtx.beginPath();
+                physCtx.moveTo(electrodeW + pinchOffX, channelY - 15);
+                physCtx.lineTo(electrodeW + pinchOffX - 6, channelY - 26);
+                physCtx.lineTo(electrodeW + pinchOffX + 6, channelY - 26);
+                physCtx.fill();
+                physCtx.fillText('Estrangulamiento', electrodeW + pinchOffX, channelY - 32);
+                
+                physCtx.fillStyle = '#f8fafc';
+                physCtx.fillText('SATURACIÓN: El canal colapsa; la velocidad de inyección alcanza su máximo.', w/2, channelY + 60);
+            }
+
+            // Siguiente frame
+            requestAnimationFrame(drawPhysics);
+        }
+
+        // Arrancamos el ciclo
+        requestAnimationFrame(drawPhysics);
+
+        // Listeners
+        vgsSlider.addEventListener('input', draw);
+        vdsSlider.addEventListener('input', draw);
+
+        // --- Asistente de IA (Gemini API) ---
+        const btnAnalyze = document.getElementById('btnAnalyze');
+        const btnAsk = document.getElementById('btnAsk');
+        const aiInput = document.getElementById('aiInput');
+        const aiOutput = document.getElementById('aiOutput');
+
+        // Función base para contactar a Gemini
+        async function callGemini(promptText) {
+            // Mostrar estado de carga
+            aiOutput.innerHTML = '<div class="flex items-center gap-2 text-indigo-400 animate-pulse"><svg class="animate-spin h-5 w-5" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Analizando la física y generando respuesta...</div>';
+            
+            // Instrucciones del sistema (Define la personalidad y reglas)
+            const systemPrompt = "Eres un profesor universitario experto en física de semiconductores, electroquímica y transistores EGOFET (Electrolyte-Gated Organic Field-Effect Transistor). Tu objetivo es ayudar a los estudiantes a comprender los fenómenos físicos subyacentes. Responde siempre en español, de forma clara, científica pero pedagógica, y no muy extensa (máximo 2 a 3 párrafos). Utiliza analogías si lo crees útil para explicar el estrangulamiento, la doble capa eléctrica o la acumulación de portadores.";
+            
+            // Credenciales y endpoint
+            const apiKey = ""; // API Key proveída e inyectada por el entorno
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: promptText }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] }
+            };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                
+                if (result.candidates && result.candidates[0].content && result.candidates[0].content.parts[0].text) {
+                    let text = result.candidates[0].content.parts[0].text;
+                    // Pequeño formateo de Markdown a HTML (solo negritas para esta demo)
+                    text = text.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>');
+                    aiOutput.innerHTML = text;
+                } else {
+                    throw new Error("Respuesta estructurada de forma inesperada o vacía.");
+                }
+            } catch (error) {
+                console.error("Error llamando a Gemini:", error);
+                aiOutput.innerHTML = `<span class="text-red-400">Hubo un error al contactar al tutor IA. Por favor, intenta de nuevo o revisa tu conexión. (Detalle: ${error.message})</span>`;
+            }
+        }
+
+        // Lógica: Botón de Análisis
+        btnAnalyze.addEventListener('click', () => {
+            const vgs = vgsSlider.value;
+            const vds = vdsSlider.value;
+            const res = calculateId(parseFloat(vgs), parseFloat(vds));
+            const id = res.id.toFixed(2);
+            let regimeName = res.regime; // 'corte', 'lineal', 'saturacion'
+            
+            const prompt = `Actualmente el estudiante tiene configurado el simulador interactivo del EGOFET con los siguientes parámetros:\n- Voltaje de Puerta (Vgs) = ${vgs} V\n- Voltaje Drenador (Vds) = ${vds} V\n- Corriente de Drenador (Id) = ${id} µA.\nEl transistor se encuentra operando en el régimen: ${regimeName.toUpperCase()}.\n\nPor favor, explícale al estudiante qué significa esto físicamente. ¿Qué está pasando con la Doble Capa Eléctrica (EDL) en la interfaz con el polímero, cómo es la forma del canal de conducción de portadores y por qué la corriente fluye de esta manera bajo estas condiciones exactas?`;
+            
+            callGemini(prompt);
+        });
+
+        // Lógica: Botón de Pregunta Libre
+        btnAsk.addEventListener('click', () => {
+            const question = aiInput.value.trim();
+            if (!question) return;
+            
+            // Extraemos el contexto actual para enriquecer la respuesta
+            const vgs = vgsSlider.value;
+            const vds = vdsSlider.value;
+            const res = calculateId(parseFloat(vgs), parseFloat(vds));
+            
+            const prompt = `Un estudiante viendo una simulación de EGOFET te hace la siguiente pregunta teórica: "${question}"\n\n(Contexto actual del simulador por si es útil para responder: Vgs=${vgs}V, Vds=${vds}V, Régimen=${res.regime.toUpperCase()}). Responde directamente a su pregunta enfocándote en la física del dispositivo.`;
+            
+            callGemini(prompt);
+            aiInput.value = ''; // Limpiar el input después de enviar
+        });
+
+        // Permitir usar "Enter" en el input
+        aiInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                btnAsk.click();
+            }
+        });
+
+        // Inicializar
+        setTimeout(() => {
+            resizeCanvas();
+        }, 100); // Pequeño retraso para asegurar que CSS haya cargado
+
+    </script>
+</body>
+</html>
