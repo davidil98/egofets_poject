@@ -13,6 +13,7 @@ Each top-level group is a measurement. Its structure:
 
 import h5py
 import os
+import numpy as np
 
 
 def list_measurements(hdf5_path):
@@ -112,15 +113,40 @@ def get_dset_array(hdf5_path, measurement_name, dsets: list = None) -> tuple:
     
     return tuple(dsets_list)
 
-def read_curve(hdf5_path, measurement_name, curve_name='curve_000'):
+def _has_hysteresis(v_gs):
+    """Devuelve el indice de quiebre si la curva tiene forward+reverse, o None."""
+    signs = np.sign(np.diff(v_gs))
+    signs = signs[signs != 0]
+    changes = np.where(np.diff(signs) != 0)[0]
+    if len(changes) == 0:
+        return None
+    return changes[0] + 1
+
+def read_curve(hdf5_path, measurement_name, curve_name='curve_000', fwd_only: bool = True):
     """Read V_GS and I_DS from a single transfer curve.
 
     Returns v_gs, i_ds as numpy arrays.
+    
+    Parameters
+    ----------
+    hdf5_path : str
+        Path to the HDF5 file.
+    measurement_name : str
+        Name of the measurement group.
+    curve_name : str, optional
+        Name of the curve to read. Default is 'curve_000'.
+    fwd_only : bool, optional
+        If True, return the forward curve. If False, return the fwd + reverse curve.
     """
     with h5py.File(hdf5_path, 'r') as f:
         curve = f[measurement_name][curve_name]
-        v_gs = curve['measured_V_GS'][:]
-        i_ds = curve['measured_I_DS'][:]
+        if fwd_only:
+            split = _has_hysteresis(curve['measured_V_GS'][:])
+            v_gs = curve['measured_V_GS'][:split+1]
+            i_ds = curve['measured_I_DS'][:split+1]
+        else:
+            v_gs = curve['measured_V_GS'][:]
+            i_ds = curve['measured_I_DS'][:]
     return v_gs, i_ds
 
 

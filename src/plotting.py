@@ -3,20 +3,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .readers.keithley_dean import list_measurements, read_all_curves
+from .readers.keithley_dean import list_measurements, read_all_curves, _has_hysteresis
 
 
-def _has_hysteresis(v_gs):
-    """Devuelve el indice de quiebre si la curva tiene forward+reverse, o None."""
-    signs = np.sign(np.diff(v_gs))
-    signs = signs[signs != 0]
-    changes = np.where(np.diff(signs) != 0)[0]
-    if len(changes) == 0:
-        return None
-    return changes[0] + 1
-
-
-def plot_transfer(hdf5_path, measurement_name, ax=None):
+def plot_transfer(hdf5_path, measurement_name, loop: bool=True, ax=None):
     """Grafica todas las curvas de una medicion transfer desde un HDF5.
 
     Cada V_DS se dibuja con un color distinto. Si la curva tiene ida y vuelta
@@ -29,6 +19,10 @@ def plot_transfer(hdf5_path, measurement_name, ax=None):
         Ruta al archivo HDF5.
     measurement_name : str
         Nombre del grupo top-level dentro del HDF5.
+    loop : bool, opcional
+        Si es True, grafica ambas curvas (forward y reverse).
+        Si es False, grafica solo la curva forward.
+        Default es True.
     ax : matplotlib.axes.Axes, opcional
         Ejes donde graficar. Si es None, se crea una figura nueva.
 
@@ -51,16 +45,22 @@ def plot_transfer(hdf5_path, measurement_name, ax=None):
         curve_name = c['curve_name']
         curve_idx = curve_name.split('_')[-1]
         color = colors[i % len(colors)]
-
+        
         split = _has_hysteresis(v_gs)
-        if split is None:
-            ax.plot(v_gs, i_ds, 'o-', ms=3, color=color,
-                    label=f'{float(v_ds):.2f} V (#{curve_idx})')
+        
+        if loop:
+            if split is None:
+                ax.plot(v_gs, i_ds, 'o-', ms=3, color=color,
+                        label=f'{float(v_ds):.2f} V (#{curve_idx})')
+            else:
+                ax.plot(v_gs[:split+1], i_ds[:split+1], 'o-', ms=3,
+                        color=color, label=f'{float(v_ds):.2f} V (#{curve_idx})')
+                ax.plot(v_gs[split+1:], i_ds[split+1:], 'o--', ms=3,
+                        color=color, label='_nolegend_')
         else:
-            ax.plot(v_gs[:split+1], i_ds[:split+1], 'o-', ms=3,
-                    color=color, label=f'{float(v_ds):.2f} V (#{curve_idx})')
-            ax.plot(v_gs[split+1:], i_ds[split+1:], 'o--', ms=3,
-                    color=color, label='_nolegend_')
+            # Solo graficamos el forward
+            ax.plot(v_gs[:split+1], i_ds[:split+1], 'o-', ms=3, color=color,
+                    label=f'{float(v_ds):.2f} V (#{curve_idx})')
 
     ax.set_xlabel(r"$V_{GS}$ (V)")
     ax.set_ylabel(r"$I_{DS}$ (A)")

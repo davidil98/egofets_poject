@@ -36,7 +36,7 @@ def print_structure(hdf5_path, max_depth=3):
         print(f"/ [{len(f.keys())} groups]")
         _walk(f, "  ", depth=1)
 
-def view_tree_content(hdf5_path, attribute_name=None):
+def view_tree_content(hdf5_path, attribute_name: str=None):
     """Imprime la estructura del HDF5 de forma visual y legible.
     
     Parameters
