@@ -122,10 +122,11 @@ def _has_hysteresis(v_gs):
         return None
     return changes[0] + 1
 
-def read_curve(hdf5_path, measurement_name, curve_name='curve_000', fwd_only: bool = True):
+def read_curve(hdf5_path, measurement_name, curve_name='curve_000', curve_type: str = "transfer",fwd_only: bool = True):
     """Read V_GS and I_DS from a single transfer curve.
+    Else read V_DS and I_DS from a single output curve.
 
-    Returns v_gs, i_ds as numpy arrays.
+    Returns v_gs, i_ds or v_ds, i_ds as numpy arrays.
     
     Parameters
     ----------
@@ -140,14 +141,29 @@ def read_curve(hdf5_path, measurement_name, curve_name='curve_000', fwd_only: bo
     """
     with h5py.File(hdf5_path, 'r') as f:
         curve = f[measurement_name][curve_name]
-        if fwd_only:
-            split = _has_hysteresis(curve['measured_V_GS'][:])
-            v_gs = curve['measured_V_GS'][:split+1]
-            i_ds = curve['measured_I_DS'][:split+1]
+        if curve_type == "transfer":
+            if fwd_only:
+                split = _has_hysteresis(curve['measured_V_GS'][:])
+                v_gs = curve['measured_V_GS'][:split+1]
+                i_ds = curve['measured_I_DS'][:split+1]
+            else:
+                v_gs = curve['measured_V_GS'][:]
+                i_ds = curve['measured_I_DS'][:]
+            return v_gs, i_ds
+
+        elif curve_type == "output":
+            if fwd_only:
+                split = _has_hysteresis(curve['measured_V_DS'][:])
+                v_ds = curve['measured_V_DS'][:split+1]
+                i_ds = curve['measured_I_DS'][:split+1]
+            else:
+                v_ds = curve['measured_V_DS'][:]
+                i_ds = curve['measured_I_DS'][:]
+            return v_ds, i_ds
         else:
-            v_gs = curve['measured_V_GS'][:]
-            i_ds = curve['measured_I_DS'][:]
-    return v_gs, i_ds
+            raise ValueError(
+                f"Curve type '{curve_type}' is not supported. Use 'transfer' or 'output'."
+            )
 
 
 def read_all_curves(hdf5_path, measurement_name):
