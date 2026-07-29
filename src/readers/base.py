@@ -57,9 +57,15 @@ def view_tree_content(hdf5_path, attribute_name: str=None):
             short_name = name.split('/')[-1]
                 
             if isinstance(obj, h5py.Group):
-                print(f"{sangria}📁 {short_name}/  Atributo: {obj.attrs.get(attribute_name)}")
+                if attribute_name:
+                    print(f"{sangria}📁 {short_name}/  Atributo: {obj.attrs.get(attribute_name, 'Unknown')}")
+                else:
+                    print(f"{sangria}📁 {short_name}/")
             else:
-                print(f"{sangria}⚡ {short_name} (Shape: {obj.shape}, Tipo: {obj.dtype}), Atributo: {obj.attrs.get(attribute_name)}")
+                if attribute_name:
+                    print(f"{sangria}⚡ {short_name} (Shape: {obj.shape}, Tipo: {obj.dtype}), Atributo: {obj.attrs.get(attribute_name, 'Unknown')}")
+                else:
+                    print(f"{sangria}⚡ {short_name} (Shape: {obj.shape}, Tipo: {obj.dtype})")
         
         # 2. Le pasamos esta función a visititems para que recorra el subgrupo
         f.visititems(mostrar_elemento)

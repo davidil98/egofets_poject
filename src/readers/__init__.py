@@ -10,11 +10,12 @@ HDF5 file structure:
           ...
 """
 
-from .base import print_structure
+from .base import print_structure, view_tree_content
 from .keithley_dean import list_measurements, read_curve, read_all_curves, view_measurements
 
 __all__ = [
     "print_structure",
+    "view_tree_content",
     "list_measurements",
     "read_curve",
     "read_all_curves",
