@@ -175,14 +175,17 @@ def read_all_curves(hdf5_path, measurement_name):
     with h5py.File(hdf5_path, 'r') as f:
         group = f[measurement_name]
         for curve_name in sorted(group.keys()):
-            curve = group[curve_name]
-            v_gs = curve['measured_V_GS'][:]
-            i_ds = curve['measured_I_DS'][:]
-            v_ds = curve.attrs.get('V_DS', None)
-            curves.append({
-                'v_gs': v_gs,
-                'i_ds': i_ds,
-                'v_ds': v_ds,
-                'curve_name': curve_name,
-            })
+            try:
+                curve = group[curve_name]
+                v_gs = curve['measured_V_GS'][:]
+                i_ds = curve['measured_I_DS'][:]
+                v_ds = curve['measured_V_DS'][:]
+                curves.append({
+                    'v_gs': v_gs,
+                    'i_ds': i_ds,
+                    'v_ds': v_ds,
+                    'curve_name': curve_name,
+                })
+            except:
+                raise ValueError(f"Los atributos 'measured_V_GS', 'measured_I_DS' o 'measured_V_DS' no existe en la curva {curve_name}.\nPor favor, verifique que la medición sea una medición de transferencia o salida. Recomendado usar: print_structure de base.py")
     return curves

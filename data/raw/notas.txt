@@ -1,0 +1,6 @@
+Las muestras del mes 06 (junio) fueron fabricadas sobre sustrato de obleas de dilicio (waffers) y después, ahora julio, en kapton.
+El problema de las obleas de silicio es que tuvímos problemas desde la evaporación de oro hasta el lift-off a pesar de que su calidad de grabado es uniforme y definida.
+Durante las mediciones provocaba que hubieran fenómenos comola degradación (respondía correctamente en las transfer al principio y posteriormente ya no), respondía lento o antes.
+Sospechamos de filtraciones de agua por la porosidad de la evaporación de oro y la suseptibilidad a la humedad del ambiente. En resumen, no resultaron tan estables y repoducibles como esperabamos.
+
+Por otro lado, el kapton ha sido más estable a pesar de presentar cierta rugosidad y hasta estos días se sigue probando su reproducibilidad debido a que aún estoy terminando de acostumbrarme a los pequeños cambios en el procedimiento de fabricación.

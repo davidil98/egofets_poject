@@ -51,16 +51,16 @@ def plot_transfer(hdf5_path, measurement_name, loop: bool=True, ax=None):
         if loop:
             if split is None:
                 ax.plot(v_gs, i_ds, 'o-', ms=3, color=color,
-                        label=f'{float(v_ds):.2f} V (#{curve_idx})')
+                        label=f'{float(v_ds[0]):.2f} V (#{curve_idx})')
             else:
                 ax.plot(v_gs[:split+1], i_ds[:split+1], 'o-', ms=3,
-                        color=color, label=f'{float(v_ds):.2f} V (#{curve_idx})')
+                        color=color, label=f'{float(v_ds[0]):.2f} V (#{curve_idx})') # Es el primer valor porque se repite para todas las mediciones.
                 ax.plot(v_gs[split+1:], i_ds[split+1:], 'o--', ms=3,
                         color=color, label='_nolegend_')
         else:
             # Solo graficamos el forward
             ax.plot(v_gs[:split+1], i_ds[:split+1], 'o-', ms=3, color=color,
-                    label=f'{float(v_ds):.2f} V (#{curve_idx})')
+                    label=f'{float(v_ds[0]):.2f} V (#{curve_idx})')
 
     ax.set_xlabel(r"$V_{GS}$ (V)")
     ax.set_ylabel(r"$I_{DS}$ (A)")
@@ -105,7 +105,7 @@ def plot_output(hdf5_path, measurement_name, ax=None):
         color = colors[i % len(colors)]
         
         ax.plot(v_ds, i_ds, 'o-', ms=3, color=color,
-                label=f'{float(v_gs[0]):.2f} V (#{curve_idx})')
+                label=f'{float(v_gs[0]):.2f} V (#{curve_idx})') # Es el primer valor porque se repite para todas las mediciones.
 
     ax.set_xlabel(r"$V_{DS}$ (V)")
     ax.set_ylabel(r"$I_{DS}$ (A)")
