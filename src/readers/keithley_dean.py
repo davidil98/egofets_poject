@@ -54,14 +54,28 @@ def view_measurements(hdf5_path):
         print(str_data)
         return str_data
 
-def get_dset_names(hdf5_path, measurement_name):
+def get_dset_names(hdf5_path, measurement_name, curve_name: str = None):
     """Get the dataset names from a measurement.
     
     Returns a list of dicts with keys: name, shape, dtype, attrs.
+    
+    Parameters
+    ----------
+    hdf5_path : str
+        Path to the HDF5 file.
+    measurement_name : str
+        Name of the measurement group.
+    curve_name : str, optional
+        Name of the curve to read. If None, measurement don't contain curve names.
+        Measurement contain only datasets.
     """
     datasets = []
     with h5py.File(hdf5_path, 'r') as f:
         group = f[measurement_name]
+
+        if curve_name:
+            group = group[curve_name]
+        
         for name in sorted(group.keys()):
             dataset = group[name]
             datasets.append({
@@ -72,7 +86,7 @@ def get_dset_names(hdf5_path, measurement_name):
             })
     return datasets
 
-def get_dset_array(hdf5_path, measurement_name, dsets: list = None) -> tuple:
+def get_dset_array(hdf5_path, measurement_name,curve_name: str = None, dsets: list = None) -> tuple:
     """Get the array from a dataset.
     
     Returns a numpy array for each dataset. If not specified, return all dsets.
@@ -83,6 +97,9 @@ def get_dset_array(hdf5_path, measurement_name, dsets: list = None) -> tuple:
         Path to the HDF5 file.
     measurement_name : str
         Name of the measurement group.
+    curve_name : str, optional
+        Name of the curve to read. If None, measurement don't contain curve names.
+        Measurement contain only datasets.
     dsets : list, optional
         List of dataset names to read. If None, all datasets are read.
 
@@ -104,6 +121,10 @@ def get_dset_array(hdf5_path, measurement_name, dsets: list = None) -> tuple:
 
     with h5py.File(hdf5_path, 'r') as f:
         group = f[measurement_name]
+        
+        if curve_name:
+            group = group[curve_name]
+        
         if dsets is None:
             dsets = sorted(group.keys())
         
