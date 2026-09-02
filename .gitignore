@@ -7,8 +7,7 @@ __pycache__/
 # --- Jupyter ---
 .ipynb_checkpoints/
 
-# --- Docs (build artefact) ---
-docs/
+
 
 # Note: __init__.py is intentionally NOT ignored — it is the
 # Python package marker required for `from src...` imports.
