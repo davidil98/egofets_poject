@@ -1,0 +1,122 @@
+# ============================================================
+# Yield Tracking Template
+# EGOFET Fabrication - e-MolMat Group, ICMAB-CSIC
+# ============================================================
+#
+# Instructions:
+# 1. Copy this file to data/raw/{date}_{batch_id}.yaml
+#    Example: data/raw/2026-09-15_S03.yaml
+# 2. Fill in batch-level information at the top
+# 3. Record each device as an entry under 'devices'
+# 4. Run notebooks/yield_analysis.ipynb to compute summary
+#
+# Field definitions:
+#   - batch_id:       Unique identifier (date_substrate)
+#   - date:           Fabrication date (YYYY-MM-DD)
+#   - process:        "baseline" (S1813 only) or "bilayer" (PMGI+S1813)
+#   - photoresist:    Description of resist stack
+#   - lift_off:       Lift-off method and parameters
+#   - evaporation:    Cr/Au deposition parameters
+#   - visual_pass:    Channel clean after lift-off? (true/false)
+#   - pattern_pass:   Electrode pattern intact? (true/false)
+#   - cotton_swab:    Cotton swab used? (true/false)
+#   - functional:     Device shows transistor behavior? (true/false)
+#   - Vth:            Threshold voltage (V)
+#   - Ion_Ioff:       ON/OFF current ratio
+#   - mobility:       Field-effect mobility (cm^2/Vs)
+#   - hysteresis:     Delta_Vth between forward/reverse sweeps (V)
+#   - notes:          Free-text observations
+# ============================================================
+
+batch_id: "2026-09-15_S01"
+date: "2026-09-15"
+process: "bilayer"          # "baseline" or "bilayer"
+substrate: "Kapton 75um"
+photoresist: "PMGI SF5 + S1813"
+lift_off: "DMSO 60C, 2.5h"
+evaporation:
+  Cr_thickness_nm: 5
+  Au_thickness_nm: 40
+  rate_Cr_A_per_s: 0.2
+  rate_Au_A_per_s: 0.5
+  base_pressure_mbar: 5e-6
+  notes: ""
+osc:
+  material: "diF-TES-ADT:PS 4:1"
+  concentration_wt: 2
+  solvent: "chlorobenzene"
+  BAMS_speed_mm_s: 10
+  BAMS_temperature_C: 105
+  volume_uL: 35
+sam:
+  molecule: "PFBT"
+  concentration_uL_per_mL: 2
+  immersion_time_min: 15
+  UVO_time_min: 25
+gate_electrolyte: "DI water"
+
+devices:
+  - device_id: 1
+    visual_pass: true
+    pattern_pass: true
+    cotton_swab: false
+    functional: true
+    Vth: -0.15
+    Ion_Ioff: 45
+    mobility: 0.8
+    hysteresis: 0.12
+    notes: ""
+
+  - device_id: 2
+    visual_pass: true
+    pattern_pass: true
+    cotton_swab: false
+    functional: true
+    Vth: -0.22
+    Ion_Ioff: 38
+    mobility: 0.7
+    hysteresis: 0.18
+    notes: "minor edge roughness"
+
+  - device_id: 3
+    visual_pass: true
+    pattern_pass: true
+    cotton_swab: false
+    functional: false
+    Vth: null
+    Ion_Ioff: null
+    mobility: null
+    hysteresis: null
+    notes: "OSC film non-uniform, dewetting near edge"
+
+  - device_id: 4
+    visual_pass: true
+    pattern_pass: true
+    cotton_swab: false
+    functional: true
+    Vth: -0.18
+    Ion_Ioff: 42
+    mobility: 0.75
+    hysteresis: 0.15
+    notes: ""
+
+  # Add more devices as needed...
+
+# ============================================================
+# Batch Summary (compute after filling all devices)
+# ============================================================
+batch_summary:
+  total_devices: 4
+  visual_pass_count: 4
+  pattern_pass_count: 4
+  cotton_swab_count: 0
+  functional_count: 3
+  Yv_percent: 100.0
+  Yp_percent: 100.0
+  Ye_percent: 75.0
+  Ycomposite_percent: 75.0
+  mean_Vth: -0.18
+  std_Vth: 0.04
+  mean_mobility: 0.75
+  mean_Ion_Ioff: 42
+  mean_hysteresis: 0.15

@@ -1,0 +1,439 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{tcolorbox}
+\usepackage{siunitx}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{amsmath}
+\usepackage{pgfplots}
+\usepackage{pgfplotstable}
+\usepackage{tikz}
+\usepackage{multirow}
+
+\pgfplotsset{compat=1.18}
+\geometry{margin=2.5cm}
+
+\definecolor{stepcolor}{RGB}{41, 128, 185}
+\definecolor{warncolor}{RGB}{231, 76, 60}
+\definecolor{tipcolor}{RGB}{39, 174, 96}
+\definecolor{paramcolor}{RGB}{142, 68, 173}
+\definecolor{baseline}{RGB}{52, 73, 94}
+\definecolor{bilayer}{RGB}{39, 174, 96}
+
+\newtcolorbox{warningbox}[1][]{colback=warncolor!5,colframe=warncolor!80,fonttitle=\bfseries,title={#1}}
+\newtcolorbox{tipbox}[1][]{colback=tipcolor!5,colframe=tipcolor!80,fonttitle=\bfseries,title={#1}}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small Yield Analysis Methodology}
+\fancyhead[R]{\small EGOFET Fabrication}
+\fancyfoot[C]{\thepage}
+
+\title{
+    \vspace{-1cm}
+    \textbf{Yield Analysis for EGOFET Electrode Patterning} \\
+    \large Measuring the Impact of the PMGI/S1813 Bilayer Lift-Off Process
+}
+\author{
+    e-MolMat Group -- ICMAB-CSIC \\
+    \texttt{v1.0 -- \today}
+}
+\date{}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{fancy}
+
+\begin{abstract}
+This document defines a methodology for quantifying the success rate of
+the EGOFET electrode patterning process. It introduces three complementary
+metrics: \textbf{visual yield} (microscope inspection), \textbf{electrical
+yield} (device functionality), and \textbf{pattern integrity} (structural
+quality). These metrics enable a rigorous before/after comparison between
+the current single-layer S1813 protocol and the proposed PMGI/S1813
+bilayer protocol. A data recording template is provided for systematic
+tracking across fabrication batches.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+% ============================================================
+\section{Motivation}
+% ============================================================
+
+The primary failure mode in current EGOFET fabrication is residual gold
+in the Source--Drain channels after lift-off. This forces manual removal
+with cotton swabs, which damages electrode patterns and reduces
+device-to-device reproducibility.
+
+To evaluate whether the PMGI/S1813 bilayer process improves yield, we
+need \textbf{quantitative metrics} that capture:
+\begin{enumerate}
+    \item How many devices survive fabrication without defects.
+    \item How many devices are electrically functional.
+    \item How uniform the electrode patterns are across a batch.
+\end{enumerate}
+
+These metrics also serve as a diagnostic tool: if yield drops in future
+batches, the data can pinpoint which fabrication step degraded.
+
+% ============================================================
+\section{Definitions}
+% ============================================================
+
+\subsection{Device}
+
+A \textbf{device} is a single EGOFET structure on the Kapton substrate,
+consisting of:
+\begin{itemize}
+    \item Source electrode (Au)
+    \item Drain electrode (Au)
+    \item Channel region (between Source and Drain)
+    \item Gate electrode (Au, coplanar)
+    \item Gate area (defined by dextran or geometry)
+\end{itemize}
+
+Each substrate typically contains multiple devices (e.g., 4--8 per chip).
+All devices on a substrate are counted individually.
+
+\subsection{Batch}
+
+A \textbf{batch} is a single fabrication run, identified by date and
+substrate number. Example: \texttt{2026-09-15\_S03} = September 15, 2026,
+Substrate 3.
+
+% ============================================================
+\section{Yield Metrics}
+% ============================================================
+
+\subsection{Metric 1: Visual Yield ($Y_v$)}
+
+\textbf{Definition:} Percentage of devices where the channel region is
+\textbf{completely free} of gold residue after lift-off, as determined
+by optical microscope inspection.
+
+\begin{equation}
+    Y_v = \frac{N_{\text{clean channels}}}{N_{\text{total devices}}}
+    \times 100\%
+\end{equation}
+
+\begin{tipbox}[Inspection Protocol]
+\begin{enumerate}
+    \item Inspect each device at $\geq 20\times$ magnification after
+          lift-off and cleaning.
+    \item A device is \textbf{PASS} if: no gold islands, no metal fences,
+          no visible debris in the channel region.
+    \item A device is \textbf{FAIL} if: any gold residue is visible in
+          the channel, regardless of size.
+    \item Record the number of PASS and FAIL devices per substrate.
+\end{enumerate}
+\end{tipbox}
+
+\subsection{Metric 2: Pattern Integrity ($Y_p$)}
+
+\textbf{Definition:} Percentage of devices where the gold electrode
+pattern is \textbf{structurally intact} after lift-off --- i.e., no
+delamination, no scratching, no broken electrodes.
+
+\begin{equation}
+    Y_p = \frac{N_{\text{intact patterns}}}{N_{\text{total devices}}}
+    \times 100\%
+\end{equation}
+
+\begin{tipbox}[Inspection Protocol]
+\begin{enumerate}
+    \item Inspect each device at $\geq 10\times$ magnification.
+    \item A device is \textbf{PASS} if: all electrodes are continuous,
+          edges are sharp, no peeling or cracking visible.
+    \item A device is \textbf{FAIL} if: any electrode is broken, peeled,
+          scratched, or has irregular edges.
+    \item Record the number of PASS and FAIL devices per substrate.
+\end{enumerate}
+\end{tipbox}
+
+\subsection{Metric 3: Electrical Yield ($Y_e$)}
+
+\textbf{Definition:} Percentage of devices that show \textbf{functional}
+transistor behavior after semiconductor deposition and gating.
+
+\begin{equation}
+    Y_e = \frac{N_{\text{functional devices}}}{N_{\text{total devices}}}
+    \times 100\%
+\end{equation}
+
+\begin{tipbox}[Functional Criteria]
+A device is \textbf{functional} if all of the following are met:
+\begin{enumerate}
+    \item Transfer curve ($I_D$ vs.\ $V_G$) shows clear ON/OFF switching.
+    \item $I_{\text{ON}} / I_{\text{OFF}} \geq 10$.
+    \item Threshold voltage $|V_{\text{th}}| < \SI{1}{\V}$.
+    \item Hysteresis between forward and reverse sweeps
+          $\Delta V_{\text{th}} < \SI{0.3}{\V}$.
+\end{enumerate}
+\end{tipbox}
+
+\subsection{Composite Yield Score}
+
+For overall process comparison, define a \textbf{composite yield}:
+
+\begin{equation}
+    Y_{\text{composite}} = Y_v \times Y_p \times Y_e
+\end{equation}
+
+This penalizes any failure mode. For example, if $Y_v = 95\%$,
+$Y_p = 98\%$, and $Y_e = 90\%$, then $Y_{\text{composite}} = 83.7\%$.
+
+% ============================================================
+\section{Experimental Design}
+% ============================================================
+
+\subsection{Before/After Comparison}
+
+To demonstrate the effectiveness of the bilayer process, perform a
+controlled comparison:
+
+\begin{table}[H]
+\centering
+\caption{Experimental design for before/after comparison.}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+\textbf{Parameter} & \textbf{Group A (Baseline)} & \textbf{Group B (Bilayer)} \\
+\midrule
+Photoresist & S1813 only & PMGI SF5 + S1813 \\
+Lift-off solvent & Acetone + US & DMSO at \SI{60}{\celsius} \\
+Number of substrates & $\geq 3$ & $\geq 3$ \\
+Devices per substrate & $\geq 4$ & $\geq 4$ \\
+Total devices per group & $\geq 12$ & $\geq 12$ \\
+Evaporation batch & Same & Same \\
+OSC deposition & Same & Same \\
+Measurement protocol & Same & Same \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{warningbox}[Control Variables]
+To ensure a fair comparison, \textbf{all other parameters must be
+identical} between groups A and B:
+\begin{itemize}
+    \item Same Kapton batch and cutting procedure.
+    \item Same Si carrier wafers (or equivalent).
+    \item Same evaporator run (if possible) or same technician with same
+          parameters.
+    \item Same OSC ink batch and BAMS parameters.
+    \item Same SAM protocol (PFBT concentration, immersion time).
+    \item Same measurement equipment and settings.
+\end{itemize}
+\end{warningbox}
+
+\subsection{Sample Size Justification}
+
+With $n = 12$ devices per group and a baseline yield of $Y_0 = 50\%$
+(estimated from current process), we can detect a $\geq 25$ percentage
+point improvement ($Y_1 = 75\%$) with:
+\begin{itemize}
+    \item Significance level $\alpha = 0.05$
+    \item Power $1 - \beta = 0.80$
+\end{itemize}
+
+This is a conservative estimate. If baseline yield is lower (e.g., 30\%),
+even smaller improvements become statistically significant.
+
+% ============================================================
+\section{Data Recording}
+% ============================================================
+
+\subsection{Per-Device Record}
+
+For each device, record the following fields in the data template
+(see Appendix~\ref{app:template}):
+
+\begin{table}[H]
+\centering
+\caption{Per-device data fields.}
+\begin{tabular}{@{}llp{6cm}@{}}
+\toprule
+\textbf{Field} & \textbf{Type} & \textbf{Description} \\
+\midrule
+\texttt{batch\_id} & String & Batch identifier (e.g., \texttt{2026-09-15\_S03}) \\
+\texttt{device\_id} & Integer & Device number within substrate \\
+\texttt{process} & String & \texttt{baseline} or \texttt{bilayer} \\
+\texttt{date} & Date & Fabrication date \\
+\texttt{visual\_pass} & Boolean & Channel clean after lift-off? \\
+\texttt{pattern\_pass} & Boolean & Electrode pattern intact? \\
+\texttt{cotton\_swab} & Boolean & Cotton swab used for cleanup? \\
+\texttt{notes} & String & Free-text observations \\
+\texttt{Vth} & Float & Threshold voltage (V) \\
+\texttt{Ion\_Ioff} & Float & ON/OFF current ratio \\
+\texttt{mobility} & Float & Field-effect mobility (cm$^2$/Vs) \\
+\texttt{hysteresis} & Float & $\Delta V_{\text{th}}$ (V) \\
+\texttt{functional} & Boolean & Meets functional criteria? \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Batch Summary}
+
+After each batch, compute:
+
+\begin{table}[H]
+\centering
+\caption{Batch summary fields.}
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Metric} & \textbf{Formula} \\
+\midrule
+$Y_v$ & \texttt{visual\_pass} count / total devices \\
+$Y_p$ & \texttt{pattern\_pass} count / total devices \\
+$Y_e$ & \texttt{functional} count / total devices \\
+$Y_{\text{composite}}$ & $Y_v \times Y_p \times Y_e$ \\
+Cotton swab rate & \texttt{cotton\_swab} count / total devices \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ============================================================
+\section{Expected Outcomes}
+% ============================================================
+
+Based on literature and the physics of the bilayer undercut:
+
+\begin{table}[H]
+\centering
+\caption{Expected yield improvement.}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+\textbf{Metric} & \textbf{Baseline (S1813)} & \textbf{Bilayer (PMGI+S1813)} \\
+\midrule
+$Y_v$ (visual) & 40--60\% & \textbf{90--100\%} \\
+$Y_p$ (pattern) & 60--80\% & \textbf{95--100\%} \\
+$Y_e$ (electrical) & 30--50\% & \textbf{80--95\%} \\
+Cotton swab rate & 40--60\% & \textbf{$<$5\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{tipbox}[Interpreting Results]
+\begin{itemize}
+    \item If $Y_v$ improves but $Y_e$ does not: the problem may be in
+          OSC deposition or SAM, not in lift-off.
+    \item If $Y_p$ improves but $Y_v$ does not: the undercut may be
+          insufficient --- increase develop time.
+    \item If cotton swab rate drops to near zero: the bilayer is working
+          as intended.
+\end{itemize}
+\end{tipbox}
+
+% ============================================================
+\section{Visualization}
+% ============================================================
+
+The data should be visualized as:
+
+\begin{enumerate}
+    \item \textbf{Bar chart}: $Y_v$, $Y_p$, $Y_e$ side by side for
+          baseline vs.\ bilayer groups.
+    \item \textbf{Time series}: Yield metrics across batches to track
+          process stability.
+    \item \textbf{Box plots}: Distribution of $V_{\text{th}}$, mobility,
+          and $I_{\text{ON}}/I_{\text{OFF}}$ for each group.
+\end{enumerate}
+
+Example visualization code is provided in the companion Jupyter notebook
+(\texttt{notebooks/yield\_analysis.ipynb}).
+
+% ============================================================
+\section{References}
+% ============================================================
+
+\begin{enumerate}[label={[\arabic*]}]
+    \item Ruiz-Molina, S. PhD Thesis, ICMAB-CSIC, 2024.
+    \item Ricci, S. PhD Thesis, ICMAB-CSIC, 2020.
+    \item MicroChem Corp. \textit{PMGI Resists --- Technical Data Sheet}.
+    \item Fraunhofer IPMS. ``OFET Substrates --- Test Chips for Material
+          Characterization.'' Protocol, 2026.
+\end{enumerate}
+
+% ============================================================
+\appendix
+\section{Data Recording Template}
+\label{app:template}
+% ============================================================
+
+The complete data template is maintained as a structured file in the
+\texttt{data/} directory. See \texttt{data/yield\_template.md} for the
+field definitions and \texttt{data/raw/} for individual batch records.
+
+\subsection{Template Format}
+
+Each batch record is a YAML file named
+\texttt{data/raw/\{batch\_id\}.yaml} with the following structure:
+
+\begin{verbatim}
+batch_id: "2026-09-15_S03"
+date: "2026-09-15"
+process: "bilayer"          # "baseline" or "bilayer"
+substrate: "Kapton 75um"
+photoresist: "PMGI SF5 + S1813"
+lift_off: "DMSO 60C, 2.5h"
+evaporation:
+  Cr_thickness_nm: 5
+  Au_thickness_nm: 40
+  rate_Cr: 0.2              # A/s
+  rate_Au: 0.5              # A/s
+devices:
+  - device_id: 1
+    visual_pass: true
+    pattern_pass: true
+    cotton_swab: false
+    Vth: -0.15
+    Ion_Ioff: 45
+    mobility: 0.8
+    hysteresis: 0.12
+    functional: true
+    notes: ""
+  - device_id: 2
+    visual_pass: true
+    pattern_pass: true
+    cotton_swab: false
+    Vth: -0.22
+    Ion_Ioff: 38
+    mobility: 0.7
+    hysteresis: 0.18
+    functional: true
+    notes: "minor edge roughness"
+\end{verbatim}
+
+\subsection{Batch Summary Computation}
+
+After recording all devices, compute the batch summary:
+
+\begin{verbatim}
+batch_summary:
+  total_devices: 8
+  visual_pass_count: 8
+  pattern_pass_count: 8
+  cotton_swab_count: 0
+  functional_count: 7
+  Yv: 100.0                # %
+  Yp: 100.0                # %
+  Ye: 87.5                 # %
+  Ycomposite: 87.5         # %
+  mean_Vth: -0.18
+  std_Vth: 0.04
+  mean_mobility: 0.75
+  mean_Ion_Ioff: 41
+\end{verbatim}
+
+\end{document}
