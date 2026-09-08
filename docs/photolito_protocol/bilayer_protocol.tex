@@ -16,6 +16,8 @@
 \usepackage{caption}
 \usepackage{float}
 \usepackage{amsmath}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning}
 
 \geometry{margin=2.5cm}
 
@@ -24,6 +26,10 @@
 \definecolor{tipcolor}{RGB}{39, 174, 96}
 \definecolor{paramcolor}{RGB}{142, 68, 173}
 
+\DeclareSIUnit\angstrom{\text {Å}}
+\DeclareSIUnit{\revolution}{rev}
+\DeclareSIUnit{\rpm}{\revolution\per\minute}
+\DeclareSIUnit\mbar{mbar}
 \newtcolorbox{warningbox}[1][]{colback=warncolor!5,colframe=warncolor!80,fonttitle=\bfseries,title={#1}}
 \newtcolorbox{tipbox}[1][]{colback=tipcolor!5,colframe=tipcolor!80,fonttitle=\bfseries,title={#1}}
 \newtcolorbox{parambox}[1][]{colback=paramcolor!5,colframe=paramcolor!80,fonttitle=\bfseries,title={#1}}
@@ -79,9 +85,18 @@ underneath this metal ``fence,'' leaving gold residue in the Source--Drain
 channels. This residue must be removed manually with acetone-soaked cotton
 swabs, which frequently damages the electrode pattern.
 
+\begin{figure}[hbt!]
+      \centering
+      \includegraphics[width=0.4\textwidth]{../../data/photos/kapton/09072026_icn2/before/image_0708.jpg}\hspace{0.5cm}
+      \includegraphics[width=0.4\textwidth]{../../data/photos/kapton/09072026_icn2/after/image_0722.jpg}
+      \caption{Left: Gold residue in Source--Drain channel after lift-off process
+               using single-layer S1813. Right: Clean channel after
+               manual cotton-swab removal. This can lead to pattern damage.}
+\end{figure}
+
 \subsection{Proposed Solution}
 
-A \textbf{bilayer resist stack} consisting of:
+A bilayer resist stack consisting of:
 \begin{itemize}
     \item \textbf{PMGI SF5} (bottom layer): A polydimethylglutarimide-based
           lift-off resist that dissolves isotropically in alkaline developer,
@@ -90,8 +105,17 @@ A \textbf{bilayer resist stack} consisting of:
           resist, processed identically to the current protocol.
 \end{itemize}
 
+The bilayer stack is represented in Figure~\ref{fig:bilayer_diagram}.
+
+\begin{figure}[hbt!]
+      \centering
+      \includegraphics[width=0.5\textwidth]{bilayer-diagram.png}
+      \caption{Schematic of the bilayer lift-off process.}
+      \label{fig:bilayer_diagram}
+\end{figure}
+
 The undercut profile ensures that the evaporated metal film is
-\textbf{discontinuous} at the resist edges, allowing the solvent to
+discontinuous at the resist edges, allowing the solvent to
 penetrate and lift off the unwanted metal cleanly. DMSO at \SI{60}{\celsius}
 replaces acetone/ultrasonic for a gentler, more effective strip.
 
@@ -107,7 +131,7 @@ replaces acetone/ultrasonic for a gentler, more effective strip.
 PMGI SF5 & MicroChem lift-off resist & In stock \\
 Shipley S1813 & Positive photoresist & In stock \\
 MF-319 & TMAH developer (2.2\%) & In stock \\
-DMSO & Dimethyl sulfoxide, ULSI grade & To purchase \\
+DMSO & Dimethyl sulfoxide, ULSI grade & Purchased \\
 IPA & Isopropanol, cleanroom grade & In stock \\
 DI water & \SI{18.2}{\mega\ohm\cdot\cm} & Available \\
 Kapton HN & \SI{75}{\micro\m} polyimide foil & In stock \\
@@ -120,36 +144,36 @@ Si carrier wafer & 4-inch, for mounting & Available \\
 \section{Process Overview}
 % ============================================================
 
-The bilayer lift-off process consists of the following major steps:
-
-\begin{enumerate}[label=\textbf{Step \arabic*:}, leftmargin=3cm]
-    \item Substrate preparation and mounting
-    \item PMGI SF5 coating and prebake
-    \item S1813 coating and soft bake
-    \item Exposure (Microwriter ML3)
-    \item Development (single-step, MF-319)
-    \item Cr/Au evaporation
-    \item DMSO lift-off
-    \item Post-lift-off cleaning
-\end{enumerate}
+The bilayer lift-off process consists of eight major steps:
 
 \begin{figure}[H]
 \centering
-\fbox{\parbox{0.9\textwidth}{\centering\vspace{0.5cm}
-\textbf{Schematic: Bilayer Lift-Off Principle}\\[0.3cm]
-\begin{tabular}{ccc}
-\fbox{\parbox{2.5cm}{\centering\vspace{0.8cm}Au Au Au\\S1813 S1813\\PMGI PMGI\\---substrate---\vspace{0.3cm}}} &
-\fbox{\parbox{2.5cm}{\centering\vspace{0.8cm}Au\phantom{X}Au\\S1813\phantom{X}S1813\\PMGI\textcolor{red}{\textbf{\textunderscore\textunderscore}}PMGI\\---substrate---\vspace{0.3cm}}} &
-\fbox{\parbox{2.5cm}{\centering\vspace{0.8cm}\textcolor{green!50!black}{\textbf{Au}}\phantom{XX}\textcolor{green!50!black}{\textbf{Au}}\\S1813\phantom{XX}S1813\\PMGI\textcolor{red}{\textbf{\textunderscore\textunderscore\textunderscore}}PMGI\\---substrate---\vspace{0.3cm}}} \\
-(a) Before develop & (b) After develop & (c) After evaporation
-\end{tabular}
-\vspace{0.3cm}
-\par\smallskip
-(a) Bilayer stack before development. (b) PMGI dissolves isotropically,
-creating undercut (red dashes). (c) Metal is discontinuous at resist edges;
-lift-off removes unwanted metal cleanly.
-\vspace{0.3cm}}}
-\caption{Bilayer lift-off process schematic.}
+\begin{tikzpicture}[
+    node distance=0.6cm,
+    process/.style={draw, rounded corners=4pt, fill=stepcolor!10,
+                    text width=2.6cm, minimum height=1.4cm,
+                    align=center, font=\small\bfseries},
+    arr/.style={-Stealth, thick, stepcolor}
+]
+% Top row
+\node[process] (s1) {1.\\Substrate prep};
+\node[process, right=of s1] (s2) {2.\\PMGI coat \& prebake};
+\node[process, right=of s2] (s3) {3.\\S1813 coat \& soft bake};
+\node[process, right=of s3] (s4) {4.\\Exposure};
+% Bottom row
+\node[process, below=1.8cm of s1] (s5) {5.\\Development};
+\node[process, right=of s5] (s6) {6.\\Cr/Au evaporation};
+\node[process, right=of s6] (s7) {7.\\DMSO lift-off};
+\node[process, right=of s7] (s8) {8.\\Post-clean};
+% Top row arrows
+\foreach \i [evaluate=\i as \j using int(\i+1)] in {1,...,3}
+    \draw[arr] (s\i.east) -- (s\j.west);
+% Bottom row arrows
+\foreach \i [evaluate=\i as \j using int(\i+1)] in {5,...,7}
+    \draw[arr] (s\i.east) -- (s\j.west);
+\end{tikzpicture}
+\caption{Bilayer lift-off process overview.}
+\label{fig:process_overview}
 \end{figure}
 
 % ============================================================
@@ -160,9 +184,7 @@ lift-off removes unwanted metal cleanly.
 \subsection{Substrate Preparation and Mounting}
 
 \begin{enumerate}[label=\alph*)]
-    \item Cut Kapton foil to \SI{7}{\cm} $\times$ \SI{7}{\cm} pieces.
-          Allow cut pieces to flatten on a clean surface for 2--3 days
-          before use to avoid ridges.
+    \item Cut Kapton foil to \SI{8}{\cm} $\times$ \SI{8}{\cm} pieces.
     \item Clean the Kapton substrate:
     \begin{enumerate}[label=\roman*)]
         \item Rinse with acetone
@@ -170,7 +192,7 @@ lift-off removes unwanted metal cleanly.
         \item Dry thoroughly with N$_2$ gun (front and back)
     \end{enumerate}
     \item Mount the Kapton on a clean Si carrier wafer using Kapton
-          adhesive tape strips at the edges. Leave \textbf{gaps} between
+          adhesive tape strips at the edges. Leave gaps between
           strips so air can escape during evaporation.
     \item Ensure both Kapton and carrier are \textbf{completely dry} ---
           trapped humidity at the interface ruins exposure and evaporation.
@@ -213,7 +235,7 @@ Bake mode & Contact hotplate \\
 \end{enumerate}
 
 \begin{tipbox}[Tip: Prebake Temperature]
-The prebake temperature is the \textbf{primary control} for undercut rate.
+The prebake temperature is the primary control for undercut rate.
 At \SI{170}{\celsius} with MF-319, the undercut rate is approximately
 \SI{33}{\angstrom\per\second} (\SI{0.33}{\nm\per\s}). This provides a
 good balance between process control and development speed.
@@ -375,7 +397,7 @@ Agitation & Gentle manual swirling every \SI{30}{\min} \\
     \item Cover with a watch glass or petri dish (DMSO has low vapor
           pressure but should still be contained).
     \item Place on hotplate at \SI{60}{\celsius}.
-    \item Soak for \SIrange{2}{3}{\hours}. Swirl gently every
+    \item Soak for \SIrange{2}{4}{\hour}. Swirl gently every
           \SI{30}{\min}.
     \item The metal ``skin'' on top of the resist will begin to detach
           and float to the surface.
@@ -479,42 +501,11 @@ New chemicals & None & DMSO only \\
 \end{table}
 
 % ============================================================
-\section{References}
+% References
 % ============================================================
 
-\begin{enumerate}[label={[\arabic*]}]
-    \item MicroChem Corp. \textit{PMGI Resists --- Technical Data Sheet}.
-          Kayaku Advanced Materials, 2021. Available:
-          \url{https://kayakuam.com/product/structsure/lift-off-resists}
-
-    \item MicroChem Corp. \textit{LOR Lift-Off Resists --- Technical Data
-          Sheet}. Kayaku Advanced Materials, 2021.
-
-    \item MicroChemicals GmbH. \textit{DMSO (ULSI) --- Product
-          Information}. Available:
-          \url{https://www.microchemicals.com}
-
-    \item Nanyte. \textit{Lift-off lithography, step by step}. Tutorial,
-          2025--2026. Available:
-          \url{https://nanyte.com/photoresist-tutorials/lift-off}
-
-    \item Bonafe, F.P. et al. ``Dissipative charge transport in organic
-          mixed ionic-electronic conductor channels.'' \textit{Nature
-          Communications} \textbf{16}, 4537 (2025).
-          \doi{10.1038/s41467-025-57528-9}
-
-    \item Ruiz-Molina, S. PhD Thesis, ICMAB-CSIC, 2024. ``EGOFETs for
-          biosensing.'' Chapter 3, Section 2.2.
-
-    \item Ricci, S. PhD Thesis, ICMAB-CSIC, 2020. ``Organic
-          electrochemical transistors for biosensing.'' Chapter 6.
-
-    \item Fraunhofer IPMS. ``OFET Substrates --- Test Chips for Material
-          Characterization.'' Protocol for resist removal, 2026.
-
-    \item University of Minnesota Nano Center. ``PMMA/PMGI Bilayer E-Beam
-          Liftoff Process.'' Institutional protocol.
-          \url{https://cse.umn.edu/mnc}
-\end{enumerate}
+\bibliographystyle{ieeetr}
+\nocite{*}
+\bibliography{references}
 
 \end{document}
